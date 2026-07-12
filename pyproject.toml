@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gridpulse"
+version = "1.0.0"
+description = "End-to-end data-engineering pipeline for the Australian NEM (OpenElectricity → DuckDB → dbt → dashboard), orchestrated with Dagster."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Aditya Moon" }, { name = "Pranjal Desai" }]
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.31",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "duckdb>=1.0",
+]
+
+[project.optional-dependencies]
+orchestration = ["dagster>=1.7", "dagster-webserver", "dagster-dbt"]
+transform = ["dbt-core>=1.7", "dbt-duckdb>=1.7"]
+dashboard = ["streamlit>=1.30", "plotly>=5.24"]
+stream = ["paho-mqtt>=2.0", "dash>=3.0"]
+dev = ["pytest>=7.0", "matplotlib>=3.7", "tabulate>=0.9", "cairosvg>=2.7"]
+
+[project.scripts]
+gridpulse = "gridpulse.pipeline:main"
+
+[tool.setuptools.packages.find]
+include = ["gridpulse*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

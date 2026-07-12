@@ -1,0 +1,47 @@
+version: 2
+
+sources:
+  - name: gridpulse
+    description: >
+      Normalised analytical tables loaded by the gridpulse Python pipeline
+      (gridpulse.load) from the OpenElectricity API cache.
+    schema: main
+    tables:
+      - name: FACILITY
+        description: One row per NEM facility (dimension), geocoded.
+        columns:
+          - name: facility_id
+            description: Surrogate primary key.
+            data_tests: [unique, not_null]
+          - name: facility_code
+            data_tests: [unique, not_null]
+          - name: fuel_id
+            data_tests:
+              - relationships:
+                  to: source('gridpulse', 'FUEL_TYPE')
+                  field: fuel_id
+      - name: FUEL_TYPE
+        description: Fuel-technology dimension with renewable flag and category.
+        columns:
+          - name: fuel_id
+            data_tests: [unique, not_null]
+          - name: fuel_name
+            data_tests: [unique, not_null]
+      - name: FACILITY_POWER_EMISSIONS
+        description: 5-minute facility power (MW) and emissions (tCO2e) fact.
+        columns:
+          - name: obs_id
+            data_tests: [unique, not_null]
+          - name: facility_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('gridpulse', 'FACILITY')
+                  field: facility_id
+          - name: interval_ts
+            data_tests: [not_null]
+      - name: MARKET_PRICE_DEMAND
+        description: Network-level 5-minute price ($/MWh) and demand (MW).
+        columns:
+          - name: interval_ts
+            data_tests: [not_null]

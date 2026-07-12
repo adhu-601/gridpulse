@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_facilities
+    description: Cleaned facility dimension with fuel attributes joined on.
+    columns:
+      - name: facility_id
+        data_tests: [unique, not_null]
+      - name: network_region
+        data_tests:
+          - accepted_values:
+              values: ["NSW1", "QLD1", "VIC1", "SA1", "TAS1"]
+      - name: is_renewable
+        data_tests:
+          - accepted_values:
+              values: [true, false]
+              quote: false
+
+  - name: stg_power_emissions
+    description: 5-minute observations with local-time and energy derivations.
+    columns:
+      - name: obs_id
+        data_tests: [unique, not_null]
+      - name: local_hour
+        description: Hour of day in Australia/Sydney (0-23).
+      - name: facility_id
+        data_tests:
+          - relationships:
+              to: ref('stg_facilities')
+              field: facility_id
+
+  - name: stg_market
+    description: Network price ($/MWh) and demand (MW).
+    columns:
+      - name: interval_ts
+        data_tests: [not_null]

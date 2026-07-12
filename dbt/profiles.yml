@@ -1,0 +1,14 @@
+# dbt profile for the GridPulse warehouse.
+# The pipeline (gridpulse.load) builds the source tables into this same DuckDB
+# file; dbt then materialises staging views and mart tables on top of them.
+# Path is resolved relative to the directory dbt is invoked from (the project
+# root) and can be overridden with GRIDPULSE_DUCKDB.
+gridpulse:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('GRIDPULSE_DUCKDB', 'data/electricity_a2.duckdb') }}"
+      threads: 4
+      # marts and staging live in their own schemas inside the same database
+      schema: main

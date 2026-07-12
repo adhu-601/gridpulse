@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: dim_facility
+    description: Facility dimension (one row per facility).
+    columns:
+      - name: facility_id
+        data_tests: [unique, not_null]
+      - name: facility_code
+        data_tests: [unique, not_null]
+      - name: fuel_category
+        data_tests:
+          - accepted_values:
+              values: ["Fossil", "Renewable", "Storage", "Other"]
+
+  - name: fct_facility_interval
+    description: Analytical fact — one row per facility per 5-minute interval.
+    columns:
+      - name: obs_id
+        data_tests: [unique, not_null]
+      - name: interval_ts
+        data_tests: [not_null]
+      - name: emissions_tco2e
+        description: Non-negative by construction (validated in staging + gate).
+      - name: facility_id
+        data_tests:
+          - relationships:
+              to: ref('dim_facility')
+              field: facility_id
+
+  - name: agg_fuel_mix_daily
+    description: Daily energy & emissions by fuel technology.
+    columns:
+      - name: energy_mwh
+        data_tests: [not_null]
+
+  - name: agg_region_intensity
+    description: Per-region energy, emissions and intensity.
+    columns:
+      - name: network_region
+        data_tests:
+          - unique
+          - accepted_values:
+              values: ["NSW1", "QLD1", "VIC1", "SA1", "TAS1"]
+
+  - name: agg_diurnal_profile
+    description: Average generation by local hour-of-day and fuel category.
+    columns:
+      - name: local_hour
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23

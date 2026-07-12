@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="780" viewBox="0 0 1600 780" font-family="DM Sans, Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="11" markerHeight="11" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#141414"/>
+    </marker>
+    <marker id="ahr" markerWidth="10" markerHeight="10" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#E34A33"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="1600" height="780" fill="#FAF9F6"/>
+
+  <!-- ============ header ============ -->
+  <text x="45" y="52" font-size="30" font-weight="800" fill="#141414" letter-spacing="-1">GridPulse</text>
+  <path d="M196 44 h12 l8 -16 10 30 8 -16 h14" stroke="#41A21A" stroke-width="5"
+        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="266" y="52" font-size="30" font-weight="800" fill="#141414" letter-spacing="-1">architecture</text>
+  <text x="45" y="80" font-size="14" fill="#8F8C84">A rate-limited public API turned into governed, tested, reproducible analytics &#8212; in six stages.</text>
+  <text x="1555" y="52" font-size="12" font-weight="700" fill="#8F8C84" text-anchor="end" letter-spacing="2">NATIONAL ELECTRICITY MARKET &#183; 5-MIN DATA</text>
+  <line x1="45" y1="100" x2="1555" y2="100" stroke="#E6E3DB" stroke-width="1"/>
+
+  <!-- ============ six-stage flow ============ -->
+
+  <!-- 1 SOURCE -->
+  <g>
+    <rect x="45" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="73" cy="170" r="13" fill="#141414"/>
+    <text x="73" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+    <rect x="94" y="164" width="10" height="10" rx="2" fill="#4582B4"/>
+    <text x="111" y="174" font-size="11" font-weight="700" fill="#4582B4" letter-spacing="2">SOURCE</text>
+    <g transform="translate(221,151) scale(1.4)" fill="none" stroke="#4582B4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 18a4.5 4.5 0 0 1-.36-8.99A6 6 0 0 1 18.3 10.6 4 4 0 0 1 17.5 18Z"/>
+    </g>
+    <text x="65" y="212" font-size="17" font-weight="700" fill="#141414">OpenElectricity API</text>
+    <text x="65" y="240" font-size="12.5" fill="#57554F">REST v4 &#183; 5-minute data</text>
+    <text x="65" y="262" font-size="12.5" fill="#57554F">541-facility catalogue</text>
+    <text x="65" y="284" font-size="12.5" fill="#57554F">power &#183; CO2e &#183; price &amp; demand</text>
+    <text x="65" y="313" font-size="11" fill="#8F8C84">free tier: 500 requests/day</text>
+  </g>
+  <line x1="274" y1="237" x2="296" y2="237" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <!-- 2 INGEST -->
+  <g>
+    <rect x="302" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="330" cy="170" r="13" fill="#141414"/>
+    <text x="330" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+    <rect x="351" y="164" width="10" height="10" rx="2" fill="#3145CE"/>
+    <text x="368" y="174" font-size="11" font-weight="700" fill="#3145CE" letter-spacing="2">INGEST</text>
+    <g transform="translate(478,151) scale(1.4)" fill="none" stroke="#3145CE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v10m0 0 4-4m-4 4-4-4"/>
+      <path d="M4 17v2.2A1.8 1.8 0 0 0 5.8 21h12.4a1.8 1.8 0 0 0 1.8-1.8V17"/>
+    </g>
+    <text x="322" y="212" font-size="17" font-weight="700" fill="#141414">Resilient client</text>
+    <text x="322" y="240" font-size="12.5" fill="#57554F">batched &#183; retry 429/5xx only</text>
+    <text x="322" y="262" font-size="12.5" fill="#57554F">&#8804;480 req/day hard budget</text>
+    <text x="322" y="284" font-size="12.5" fill="#57554F">immutable raw JSON cache</text>
+    <text x="322" y="313" font-size="11" fill="#8F8C84">API hit at most once per window</text>
+  </g>
+  <line x1="531" y1="237" x2="553" y2="237" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <!-- 3 TRANSFORM & GATE -->
+  <g>
+    <rect x="559" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="587" cy="170" r="13" fill="#141414"/>
+    <text x="587" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+    <rect x="608" y="164" width="10" height="10" rx="2" fill="#1D7A7A"/>
+    <text x="625" y="174" font-size="11" font-weight="700" fill="#1D7A7A" letter-spacing="2">TRANSFORM</text>
+    <g transform="translate(735,151) scale(1.4)" fill="none" stroke="#1D7A7A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5Z"/>
+    </g>
+    <text x="579" y="212" font-size="17" font-weight="700" fill="#141414">pandas + quality gate</text>
+    <text x="579" y="240" font-size="12.5" fill="#57554F">clean &#183; aggregate &#183; geocode</text>
+    <text x="579" y="262" font-size="12.5" fill="#57554F">unit &#8594; facility, 5-min grain</text>
+    <text x="579" y="284" font-size="12.5" fill="#57554F">9 hard checks before load</text>
+    <text x="579" y="313" font-size="11" fill="#8F8C84">a failed check stops the run</text>
+  </g>
+  <line x1="788" y1="237" x2="810" y2="237" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <!-- 4 WAREHOUSE -->
+  <g>
+    <rect x="816" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="844" cy="170" r="13" fill="#141414"/>
+    <text x="844" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+    <rect x="865" y="164" width="10" height="10" rx="2" fill="#B46813"/>
+    <text x="882" y="174" font-size="11" font-weight="700" fill="#B46813" letter-spacing="2">WAREHOUSE</text>
+    <g transform="translate(992,151) scale(1.4)" fill="none" stroke="#B46813" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="5" rx="8" ry="3"/>
+      <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/>
+      <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/>
+    </g>
+    <text x="836" y="212" font-size="17" font-weight="700" fill="#141414">DuckDB</text>
+    <text x="836" y="240" font-size="12.5" fill="#57554F">normalised relational schema</text>
+    <text x="836" y="262" font-size="12.5" fill="#57554F">spatial geometry points</text>
+    <text x="836" y="284" font-size="12.5" fill="#57554F">668,134 fact rows loaded</text>
+    <text x="836" y="313" font-size="11" fill="#8F8C84">embedded &#183; zero-ops &#183; columnar</text>
+  </g>
+  <line x1="1045" y1="237" x2="1067" y2="237" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <!-- 5 MODEL & TEST -->
+  <g>
+    <rect x="1073" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="1101" cy="170" r="13" fill="#141414"/>
+    <text x="1101" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+    <rect x="1122" y="164" width="10" height="10" rx="2" fill="#7C3AED"/>
+    <text x="1139" y="174" font-size="11" font-weight="700" fill="#7C3AED" letter-spacing="2">MODEL &#183; TEST</text>
+    <g transform="translate(1249,151) scale(1.4)" fill="none" stroke="#7C3AED" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 2v6.5L4.6 18a2.4 2.4 0 0 0 2.1 3.5h10.6a2.4 2.4 0 0 0 2.1-3.5L14 8.5V2"/>
+      <path d="M8.5 2h7"/><path d="M7 15h10"/>
+    </g>
+    <text x="1093" y="212" font-size="17" font-weight="700" fill="#141414">dbt marts</text>
+    <text x="1093" y="240" font-size="12.5" fill="#57554F">staging views &#8594; star schema</text>
+    <text x="1093" y="262" font-size="12.5" fill="#57554F">47 nodes &#183; 39 data tests</text>
+    <text x="1093" y="284" font-size="12.5" fill="#57554F">dims, facts &amp; aggregates</text>
+    <text x="1093" y="313" font-size="11" fill="#8F8C84">downstream reads marts only</text>
+  </g>
+  <line x1="1302" y1="237" x2="1324" y2="237" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <!-- 6 SERVE -->
+  <g>
+    <rect x="1330" y="140" width="225" height="195" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <circle cx="1358" cy="170" r="13" fill="#141414"/>
+    <text x="1358" y="174.5" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
+    <rect x="1379" y="164" width="10" height="10" rx="2" fill="#417505"/>
+    <text x="1396" y="174" font-size="11" font-weight="700" fill="#417505" letter-spacing="2">SERVE</text>
+    <g transform="translate(1506,151) scale(1.4)" fill="none" stroke="#417505" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="13" rx="2"/>
+      <path d="M8 13v-3M12 13V8M16 13v-5"/><path d="M9 21h6M12 17v4"/>
+    </g>
+    <text x="1350" y="212" font-size="17" font-weight="700" fill="#141414">Streamlit + MQTT</text>
+    <text x="1350" y="240" font-size="12.5" fill="#57554F">analytics dashboard (marts only)</text>
+    <text x="1350" y="262" font-size="12.5" fill="#57554F">live map via MQTT &#8594; Dash</text>
+    <text x="1350" y="284" font-size="12.5" fill="#57554F">insight text on every chart</text>
+    <text x="1350" y="313" font-size="11" fill="#8F8C84">openelectricity.org.au design</text>
+  </g>
+
+  <!-- ============ Dagster control bus ============ -->
+  <line x1="157" y1="420" x2="1442" y2="420" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6"/>
+  <line x1="157" y1="420" x2="157" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <line x1="414" y1="420" x2="414" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <line x1="671" y1="420" x2="671" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <line x1="928" y1="420" x2="928" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <line x1="1185" y1="420" x2="1185" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <line x1="1442" y1="420" x2="1442" y2="343" stroke="#E34A33" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ahr)"/>
+  <rect x="628" y="438" width="344" height="34" rx="17" fill="#FFFFFF" stroke="#E34A33"/>
+  <g transform="translate(644,447)" fill="none" stroke="#E34A33" stroke-width="1.6" stroke-linecap="round">
+    <circle cx="8" cy="8" r="7.2"/><path d="M8 4.4V8l2.6 1.6"/>
+  </g>
+  <text x="812" y="460" font-size="12.5" font-weight="700" fill="#E34A33" text-anchor="middle" letter-spacing="1">DAGSTER ORCHESTRATES EVERY STAGE</text>
+  <text x="800" y="490" font-size="11.5" fill="#8F8C84" text-anchor="middle">15 software-defined assets &#183; full-refresh job &#183; daily 06:00 schedule</text>
+
+  <!-- ============ layered storage ============ -->
+  <text x="45" y="551" font-size="12" font-weight="700" fill="#8F8C84" letter-spacing="2.5">LAYERED STORAGE &#8212; EACH LAYER REBUILDS FROM THE ONE BEFORE IT</text>
+
+  <g>
+    <rect x="45" y="570" width="330" height="88" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <rect x="45" y="570" width="4" height="88" rx="2" fill="#3145CE"/>
+    <text x="67" y="600" font-size="13" font-weight="700" fill="#141414">Raw</text>
+    <text x="67" y="622" font-size="11.5" fill="#57554F" font-family="Consolas, monospace">data/raw_openelectricity/*.json</text>
+    <text x="67" y="643" font-size="11" fill="#8F8C84">immutable API responses &#183; replay source</text>
+  </g>
+  <line x1="375" y1="614" x2="405" y2="614" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <g>
+    <rect x="411" y="570" width="330" height="88" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <rect x="411" y="570" width="4" height="88" rx="2" fill="#1D7A7A"/>
+    <text x="433" y="600" font-size="13" font-weight="700" fill="#141414">Contract</text>
+    <text x="433" y="622" font-size="11.5" fill="#57554F" font-family="Consolas, monospace">consolidated_facility_5min.csv</text>
+    <text x="433" y="643" font-size="11" fill="#8F8C84">single source of truth &#183; fixed columns</text>
+  </g>
+  <line x1="741" y1="614" x2="771" y2="614" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <g>
+    <rect x="777" y="570" width="330" height="88" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <rect x="777" y="570" width="4" height="88" rx="2" fill="#B46813"/>
+    <text x="799" y="600" font-size="13" font-weight="700" fill="#141414">Warehouse</text>
+    <text x="799" y="622" font-size="11.5" fill="#57554F" font-family="Consolas, monospace">data/electricity_a2.duckdb</text>
+    <text x="799" y="643" font-size="11" fill="#8F8C84">normalised schema &#183; dbt sources</text>
+  </g>
+  <line x1="1107" y1="614" x2="1137" y2="614" stroke="#141414" stroke-width="3.5" marker-end="url(#ah)"/>
+
+  <g>
+    <rect x="1143" y="570" width="412" height="88" rx="8" fill="#FFFFFF" stroke="#E0DDD4"/>
+    <rect x="1143" y="570" width="4" height="88" rx="2" fill="#7C3AED"/>
+    <text x="1165" y="600" font-size="13" font-weight="700" fill="#141414">Marts</text>
+    <text x="1165" y="622" font-size="11.5" fill="#57554F" font-family="Consolas, monospace">main_marts.dim_ / fct_ / agg_*</text>
+    <text x="1165" y="643" font-size="11" fill="#8F8C84">tested star schema &#183; the only layer the dashboard reads</text>
+  </g>
+
+  <!-- ============ footer ============ -->
+  <line x1="45" y1="700" x2="1555" y2="700" stroke="#E6E3DB" stroke-width="1"/>
+  <text x="45" y="731" font-size="12.5" fill="#57554F">
+    <tspan font-weight="700" fill="#141414">Testing, three layers:</tspan>
+    9-check quality gate before load &#183; 39 dbt data tests after modelling &#183; 10 pytest unit tests on the transforms
+  </text>
+  <text x="1555" y="731" font-size="12.5" fill="#8F8C84" text-anchor="end">offline-reproducible: every stage replays from the raw cache</text>
+</svg>

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# Dagster
+.dagster_home/
+tmp*/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# DuckDB warehouse — rebuilt by `python -m gridpulse.pipeline`; never commit it
+*.duckdb
+*.duckdb.wal
+
+# Large derived artefact — regenerated from the raw JSON cache
+data/consolidated_facility_5min.csv
+
+# OS / editor / local tooling
+.DS_Store
+Thumbs.db
+.Rhistory
+.claude/
+.Rproj.user/
+
+# Notes:
+#   data/raw_openelectricity/ (immutable API responses) IS committed so the whole
+#   pipeline replays offline with no API key. The DuckDB warehouse and the
+#   consolidated CSV are DERIVED from it and rebuilt in one command, so they are
+#   deliberately NOT committed (the .duckdb also exceeds GitHub's 100 MB limit).
