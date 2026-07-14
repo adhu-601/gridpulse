@@ -18,6 +18,9 @@ dbt/.user.yml
 # DuckDB warehouse — rebuilt by `python -m gridpulse.pipeline`; never commit it
 *.duckdb
 *.duckdb.wal
+# ...except the slim, deploy-ready warehouse the Streamlit app reads on the
+# cloud (only the 4 dashboard tables, ~22 MB — well under GitHub's 100 MB limit).
+!data/gridpulse_dashboard.duckdb
 
 # Large derived artefact — regenerated from the raw JSON cache
 data/consolidated_facility_5min.csv

@@ -30,8 +30,14 @@ import streamlit.components.v1 as components
 # Config & design tokens
 # --------------------------------------------------------------------------- #
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DUCKDB_PATH = os.environ.get("GRIDPULSE_DUCKDB",
-                             str(PROJECT_ROOT / "data" / "electricity_a2.duckdb"))
+# Data source resolution: the full pipeline warehouse when it exists (local dev),
+# otherwise the committed slim warehouse that holds just the four tables this
+# dashboard reads — which is what ships to Streamlit Community Cloud, where the
+# 106 MB pipeline warehouse cannot be rebuilt.
+_FULL_DB = PROJECT_ROOT / "data" / "electricity_a2.duckdb"
+_SLIM_DB = PROJECT_ROOT / "data" / "gridpulse_dashboard.duckdb"
+DUCKDB_PATH = os.environ.get("GRIDPULSE_DUCKDB") or str(
+    _FULL_DB if _FULL_DB.exists() else _SLIM_DB)
 ARCH_SVG = PROJECT_ROOT / "docs" / "architecture.svg"
 AU_STATIONS_CSV = PROJECT_ROOT / "data" / "au_power_stations.csv"
 

@@ -8,6 +8,8 @@ Ingest 5-minute facility-level power &amp; emissions data, clean and geocode it,
 analytical schema into DuckDB, transform it into tested dbt marts, and serve it through a live
 map and an analytics dashboard — all orchestrated with Dagster.
 
+[![Live app](https://img.shields.io/badge/live%20app-open%20dashboard-417505?style=for-the-badge&logo=streamlit&logoColor=white)](https://gridpulse-nem-analytics.streamlit.app/)
+
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![DuckDB](https://img.shields.io/badge/DuckDB-warehouse-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/)
 [![dbt](https://img.shields.io/badge/dbt-marts%20%26%20tests-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
@@ -17,6 +19,8 @@ map and an analytics dashboard — all orchestrated with Dagster.
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 </div>
+
+> ### 🔗 Live dashboard → **https://gridpulse-nem-analytics.streamlit.app/**
 
 > Built from a COMP5339 (Data Engineering, University of Sydney) assignment and levelled up
 > into a production-shaped project: an installable package, orchestration, a dbt warehouse with

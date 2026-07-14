@@ -1,0 +1,38 @@
+# GridPulse — FULL pipeline runtime (ingest → dbt → Dagster → tests → docs).
+# Recommended: Python 3.12 (dbt-core / dagster are not yet stable on 3.14).
+#   py -3.12 -m venv .venv && .venv/Scripts/pip install -r requirements-pipeline.txt
+#
+# The deployed dashboard does NOT need any of this — Streamlit Community Cloud
+# installs the lean set in requirements.txt instead. Use this file (or the
+# pyproject extras) only for running the pipeline locally.
+
+# --- core pipeline (gridpulse package) ---
+requests>=2.31
+pandas>=2.0
+numpy>=1.24
+duckdb>=1.0
+
+# --- transform layer (dbt) ---
+dbt-core>=1.7
+dbt-duckdb>=1.7
+
+# --- orchestration (Dagster) ---
+dagster>=1.7
+dagster-webserver
+dagster-dbt
+
+# --- serving / dashboards ---
+streamlit>=1.30
+plotly>=6.0
+
+# --- live MQTT stream + Dash map (original Task 3 / Task 5 notebooks) ---
+paho-mqtt>=2.0
+dash>=3.0
+
+# --- dev / docs ---
+pytest>=7.0
+matplotlib>=3.7
+cairosvg>=2.7        # renders docs/architecture.svg -> architecture.png
+tabulate>=0.9
+jupyter>=1.0
+ipykernel>=6.0
