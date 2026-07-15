@@ -25,6 +25,9 @@ dbt/.user.yml
 # Large derived artefact — regenerated from the raw JSON cache
 data/consolidated_facility_5min.csv
 
+# Local source screenshots — the versions used by the README live in docs/screenshots/
+/Screenshots/
+
 # OS / editor / local tooling
 .DS_Store
 Thumbs.db

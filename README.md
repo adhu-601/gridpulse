@@ -2,11 +2,7 @@
 
 # GridPulse
 
-**An end-to-end data-engineering pipeline for Australia's National Electricity Market (NEM)**
-
-Ingest 5-minute facility-level power &amp; emissions data, clean and geocode it, load a normalised
-analytical schema into DuckDB, transform it into tested dbt marts, and serve it through a live
-map and an analytics dashboard — all orchestrated with Dagster.
+**An end-to-end data-engineering pipeline for Australia's National Electricity Market (NEM) — from raw API to a live analytics dashboard.**
 
 [![Live app](https://img.shields.io/badge/live%20app-open%20dashboard-417505?style=for-the-badge&logo=streamlit&logoColor=white)](https://gridpulse-nem-analytics.streamlit.app/)
 
@@ -15,165 +11,152 @@ map and an analytics dashboard — all orchestrated with Dagster.
 [![dbt](https://img.shields.io/badge/dbt-marts%20%26%20tests-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
 [![Dagster](https://img.shields.io/badge/Dagster-orchestration-654FF0?logo=dagster&logoColor=white)](https://dagster.io/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Tests](https://img.shields.io/badge/tests-10%20passing-3FB950)](#quickstart)
+[![Tests](https://img.shields.io/badge/tests-10%20passing-3FB950)](#verified-results-sample-week-1218-may-2026)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 </div>
 
 > ### 🔗 Live dashboard → **https://gridpulse-nem-analytics.streamlit.app/**
 
-> Built from a COMP5339 (Data Engineering, University of Sydney) assignment and levelled up
-> into a production-shaped project: an installable package, orchestration, a dbt warehouse with
-> data tests, a unit-test suite, and a hand-crafted architecture diagram.
+Australia's electricity market publishes a firehose of data — every generator, every five
+minutes — but the raw feed is a rate-limited API of long-format JSON, not an answer. GridPulse
+turns one week of that feed into a governed, tested analytical warehouse and a dashboard that
+answers the questions that actually matter: *where does the power come from, where does the
+carbon come from, and why are those two not the same place?*
+
+It ingests **668,134 five-minute readings** from **541 registered facilities** (353 of which
+generated during the window), cleans and geocodes them, gates them through a 9-check quality
+layer, warehouses them in **DuckDB**, models them into tested **dbt marts**, and serves them
+through a live map and an analytics dashboard — the whole thing an orchestrated **Dagster**
+asset graph that **replays offline with no API key**.
+
+![GridPulse dashboard — Overview](docs/screenshots/hero.png)
+
+> Built from a COMP5339 (Data Engineering, University of Sydney) assignment and levelled up into
+> a production-shaped project: an installable package, orchestration, a dbt warehouse with data
+> tests, a unit-test suite, and a hand-crafted architecture diagram.
+
+---
+
+## The dashboard
+
+Four views, switched from an OpenElectricity-style top navigation. Every number on every page is
+read from the **tested dbt marts** — never from raw data.
+
+### 📊 Overview
+
+The week at a glance: a headline energy/emissions split, six KPI tiles (total energy, emissions,
+grid intensity, renewable share, NEM regions, generating sites), the full seven-day generation
+stack by fuel, and a fuel-mix breakdown that makes the central insight impossible to miss —
+**coal supplies ~58% of the energy but ~95% of the emissions.**
+
+![Overview — generation stack](docs/screenshots/overview_generation.png)
+
+![Overview — energy mix vs emissions](docs/screenshots/overview_energy_mix.png)
+
+### 🗺️ Facilities
+
+Every registered NEM generator on a map (modelled on the OpenElectricity *Facilities* view):
+colour = fuel group, marker size = capacity / power / energy / emissions, and hovering shows
+**every value** for that facility. Filter by name, region, technology, or toggle in the 188
+stations that sat idle during the window. Clicking a marker — or a row in the sortable table —
+drills into that facility's five-minute week: output against its registered capacity, plus its
+emissions trace.
+
+![Facilities — map and table](docs/screenshots/facilities_map.png)
+
+![Facilities — per-facility drill-down](docs/screenshots/facility_detail.png)
+
+### 📈 Analysis
+
+The story behind the numbers: energy, carbon intensity and renewable share compared across all
+five NEM regions; the diurnal "duck curve" (seven days folded into one average day, showing solar
+carving out midday while coal holds a flat baseload floor); and a leaderboard of the 15 facilities
+that carry the grid, by energy or by emissions.
+
+![Analysis — regions](docs/screenshots/analysis_regions.png)
+
+![Analysis — the duck curve](docs/screenshots/analysis_duck_curve.png)
+
+### 📄 About
+
+The embedded case study: the architecture diagram plus a stage-by-stage narrative of ingestion,
+transformation, quality, modelling, orchestration and serving — so a reviewer can read the whole
+pipeline without leaving the app.
+
+Alongside the marts dashboard, the original **live MQTT + Plotly Dash map**
+(`Assignment2_Dashboard_Group156.ipynb`) replays the real-time stream: the Dash map answers
+*"what's happening now?"*, the Streamlit dashboard answers *"what did the week look like?"*.
+
+---
+
+## Architecture
+
+One command (`python -m gridpulse.pipeline`) reproduces every artefact — ingest, clean, geocode,
+quality-gate and load — from a **committed raw-JSON cache**, so the whole warehouse rebuilds
+**offline, with no API key**. `dbt build` then models and tests it; Dagster wraps the lot as one
+lineage graph with a daily schedule.
 
 ![Architecture](docs/architecture.svg)
 
+Layered storage keeps the API touched **at most once per window**: immutable raw JSON (committed)
+→ consolidated CSV → DuckDB schema → dbt marts. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for detail and [`docs/data_dictionary.md`](docs/data_dictionary.md) for the schema.
+
+**Engineering decisions worth reading:**
+
+- **API hygiene by design.** `OpenElectricityClient` retries **only** transient failures
+  (429 / 5xx, honouring `Retry-After`), fails fast on 4xx, tracks a request budget, and batches
+  ~25 facility codes per call — so ~430 facilities cost ~18 requests, well under the free-tier
+  500/day ceiling.
+- **Cache-first, replay-anywhere.** Every raw response is written to disk **before** parsing and
+  is committed to the repo. That single materialisation is what lets every downstream stage — and
+  every reviewer — rebuild the warehouse offline with no key.
+- **Aggregation that respects the physics.** Parallel generating units are summed to facility
+  level because power *and* emissions are additive across units (e.g. Bayswater's four coal
+  turbines), then pivoted into one wide five-minute contract.
+- **Quality gated before load, not after.** A dependency-free "expectations" layer runs **9
+  checks** (row count, schema contract, non-null keys, unique `(interval, facility)` grain,
+  region domain, in-window timestamps, non-negative emissions, coordinates in range) and stops
+  the pipeline on a hard failure — negative *power* is kept on purpose (batteries charging) but
+  flagged.
+- **Spatial done deterministically.** Coordinates are validated against an Australian bounding
+  box and any invalid/missing point is backfilled from its NEM-region centroid (offline, tagged
+  `geocode_source`), seeding a DuckDB `GEOMETRY` column.
+- **Tested in two layers.** A Python quality gate **and** **39 dbt data tests** (`unique`,
+  `not_null`, `relationships`, `accepted_values`, `accepted_range`, plus two custom singular
+  tests) guard the marts — data quality is enforced, not assumed.
+- **One lineage graph.** The pipeline is a Dagster asset graph from API to marts; a custom
+  `DagsterDbtTranslator` maps the four warehouse tables 1:1 onto dbt sources so models always run
+  *after* the warehouse loads, and every asset emits row-count / pass-rate metadata.
+
 ---
 
-## Table of contents
-
-- [Why this project](#why-this-project)
-- [Verified results](#verified-results-sample-week-1219-may-2026)
-- [Architecture at a glance](#architecture-at-a-glance)
-- [Quickstart](#quickstart)
-- [The dashboard](#the-dashboard)
-- [Project structure](#project-structure)
-- [Tech stack](#tech-stack)
-- [What I'd add next](#what-id-add-next)
-- [License](#license)
-
----
-
-## Why this project
-
-It demonstrates the skills recruiters actually screen for in a data engineer, end to end and
-**runnable offline**:
-
-| Capability | How it's shown here |
-|------------------------------------|------------------------------------|
-| **Ingestion & API hygiene** | `OpenElectricityClient` with selective retries (429/5xx only), `Retry-After` handling, request-budget tracking, and an immutable raw-JSON cache |
-| **Transformation** | Unit-to-facility aggregation, metric standardisation, UTC windowing, wide-table consolidation (668k rows) |
-| **Geocoding / spatial** | Coordinate validation against an AU bounding box, region-centroid backfill, DuckDB `GEOMETRY` points |
-| **Data quality** | A Python "expectations" gate (9 checks) **and** 39 dbt data tests (unique, not_null, relationships, accepted_values/range, custom singular tests) |
-| **Modelling** | dbt staging to marts (star-shaped `dim`/`fct` + aggregate marts) on `dbt-duckdb` |
-| **Orchestration** | Dagster software-defined assets, one lineage graph from API to marts, a daily schedule, per-run metadata |
-| **Serving** | A four-view Streamlit app (KPI overview, a full facility-explorer map with every-value hover & click drill-down, analysis, and a built-in case study of the architecture) plus the original live MQTT/Dash map |
-| **Engineering practice** | Installable package, `pyproject.toml`, `Makefile`, pytest suite, `.gitignore`, docs |
-
----
-
-## Verified results (sample week, 12–19 May 2026)
+## Verified results (sample week, 12–18 May 2026)
 
 Everything below is reproduced by the marts (`dbt build`, then query DuckDB):
 
-- **668,134** facility-interval rows across **353** generating facilities, all 5 NEM regions.
-- **0 nulls** across the consolidated contract; **9/9** quality checks pass; **47/47** dbt nodes pass.
-- **Emissions concentration:** fossil fuels are ~64% of energy but **~100% of emissions** — the headline insight.
-- **Regional intensity:** NSW1 1.20 TWh & QLD1 1.09 TWh lead on energy; **VIC1 highest intensity (0.767 tCO2e/MWh)** on brown coal; **TAS1 lowest (0.013)** on hydro.
-- **Diurnal pattern:** solar peaks ~09:00–15:00 (local), displacing gas while coal holds a flat baseline.
+- **668,134** facility-interval rows across **541** registered facilities (**353** generated in
+  the window), all **5** NEM regions — **3.62 TWh** of energy, **2.15 Mt** of CO₂e.
+- **0 nulls** across the consolidated contract; **9/9** quality-gate checks pass; **39/39** dbt
+  tests pass.
+- **Emissions concentration:** fossil fuels are **~64%** of energy but **~100%** of emissions —
+  coal alone is ~58% of energy and ~95% of the carbon. This is the headline insight.
+- **Regional intensity:** NSW1 (1.20 TWh) and QLD1 (1.09 TWh) lead on energy; **VIC1 is the
+  dirtiest grid at 0.767 tCO₂e/MWh** on brown coal while **hydro-powered TAS1 is 60× cleaner at
+  0.013** — the widest gap inside one market.
+- **Diurnal pattern:** solar peaks ~09:00–15:00 (local), carving the midday duck curve, while
+  coal never leaves the floor and gas + storage fill the evening ramp.
 
 ---
 
-## Architecture at a glance
+## 📄 Technical report
 
-```
-OpenElectricity v4 API
-        |   (batched, retried, budget-tracked)
-        v
-Raw JSON cache  -->  Clean / aggregate / geocode / quality-gate  -->  consolidated CSV (contract)
-                                                                          |
-                                                                          v
-                                                            DuckDB analytical schema (sources)
-                                                                          |  dbt
-                                                     staging views --> marts (dim / fct / agg_*)
-                                                                          |
-                                          +-------------------------------+---------------+
-                                          v                                               v
-                                Streamlit analytics dashboard              live MQTT stream + Dash map
-        (the whole pipeline is a Dagster asset graph with a daily schedule)
-```
-
-Layered storage keeps the API touched **at most once per window**: immutable raw JSON (committed)
-→ consolidated CSV → DuckDB schema → dbt marts. The repo ships the **raw JSON cache**, so the
-pipeline rebuilds the CSV and the DuckDB warehouse **offline, with no API key**. See
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for detail and
-[`docs/data_dictionary.md`](docs/data_dictionary.md) for the schema.
-
----
-
-## Quickstart
-
-Python **3.12** recommended (dbt-core / Dagster aren't stable on 3.14 yet).
-
-```bash
-# 0. clone
-git clone https://github.com/adhu-601/gridpulse.git
-cd gridpulse
-
-# 1. environment
-py -3.12 -m venv .venv
-.venv/Scripts/pip install -e ".[orchestration,transform,dashboard,stream,dev]"
-.venv/Scripts/dbt deps --project-dir dbt
-
-# 2. run the pipeline (offline, from the committed raw cache) -> builds data/electricity_a2.duckdb
-.venv/Scripts/python -m gridpulse.pipeline          # add --fetch to pull new data
-
-# 3. build + test the warehouse
-export GRIDPULSE_DUCKDB="$PWD/data/electricity_a2.duckdb"
-.venv/Scripts/dbt build --project-dir dbt --profiles-dir dbt
-
-# 4. explore
-.venv/Scripts/python -m pytest                       # unit tests
-.venv/Scripts/streamlit run dashboard/app_streamlit.py
-.venv/Scripts/dagster dev -m orchestration.definitions   # asset graph + runs at localhost:3000
-```
-
-`make help` lists the same commands. The DuckDB warehouse (~106 MB) and the consolidated CSV
-(~63 MB) are **not** committed — they are derived artefacts that step 2 rebuilds from the raw
-JSON cache in seconds.
-
-### The dashboard
-
-`streamlit run dashboard/app_streamlit.py` serves four views on the marts:
-
-1. **Overview** — KPIs, generation vs emissions donuts, the hourly generation stack for the whole week, and NEM price & demand.
-2. **Facility explorer** — all **541 facilities** on a map (modelled on the OpenElectricity *Facilities* view): colour = fuel group, size = capacity/power/energy/emissions, and hovering shows **every value** (capacity, avg/peak power, energy, emissions, intensity, capacity factor, observation count). Clicking a marker drills into that facility's 5-minute week; a sortable full table sits underneath.
-3. **Analysis** — regional energy & intensity, the diurnal "duck curve", facility leaderboards, intensity by fuel technology.
-4. **About** — the case study: the architecture diagram plus a stage-by-stage narrative of ingestion, transformation, quality, modelling, orchestration and serving.
-
-To pull a **fresh** window instead of replaying the cache, set an `OPENELECTRICITY_API_KEY` and
-run with `--fetch` (or `GRIDPULSE_FETCH=1` under Dagster).
-
----
-
-## Project structure
-
-```
-gridpulse/                 # installable pipeline package
-  config.py                #   paths, API settings, data contract
-  api_client.py            #   OpenElectricity client (retries, budget)
-  ingest.py                #   raw cache + long-format parsing
-  transform.py             #   clean / aggregate / consolidate
-  geocode.py               #   coordinate validation + centroid backfill
-  quality.py               #   dependency-free data-quality gate
-  load.py                  #   DuckDB normalised schema loader
-  pipeline.py              #   CLI entrypoint (ingest -> transform -> load)
-dbt/                       # dbt-duckdb project
-  models/staging/          #   stg_* views (typed, NEM-scoped)
-  models/marts/            #   dim_facility, fct_facility_interval, agg_*
-  tests/                   #   custom singular data tests
-orchestration/             # Dagster
-  assets.py                #   ingest -> warehouse software-defined assets
-  dbt_assets.py            #   dbt models as Dagster assets (dagster-dbt)
-  definitions.py           #   Definitions, job, daily schedule
-dashboard/app_streamlit.py # analytics dashboard on the marts
-tests/                     # pytest unit suite (transform / quality / geocode)
-docs/                      # architecture diagram + data dictionary
-data/                      # committed raw JSON cache (offline replay source);
-                           #   the DuckDB warehouse + consolidated CSV are rebuilt by the pipeline
-# original assignment deliverables kept alongside:
-Assignment2_Group156.ipynb, Assignment2_Dashboard_Group156.ipynb, *_report.pdf
-```
+A full write-up — data sourcing, methodology, the five-stage architecture, data-quality strategy,
+dbt modelling, orchestration and results — is available as a rendered
+**[PDF](GridPulse_Report.pdf)**, generated from the LaTeX source
+**[`report/gridpulse.tex`](report/gridpulse.tex)** with figures in
+[`report/fig/`](report/fig).
 
 ---
 
@@ -183,11 +166,25 @@ Assignment2_Group156.ipynb, Assignment2_Dashboard_Group156.ipynb, *_report.pdf
 
 ---
 
+## Data, scope & limitations
+
+- **Data:** [OpenElectricity](https://openelectricity.org.au/) v4 API, National Electricity
+  Market, snapshot window 12–18 May 2026, licensed
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw JSON cache **is** committed
+  so the pipeline replays offline; the DuckDB warehouse and consolidated CSV are derived and
+  rebuilt by one command.
+- Figures are a **snapshot of one seven-day window** for one market — retrain/re-pull per window
+  (one command) rather than treating them as long-run averages.
+- Reported values are **operational metering** aggregated to five-minute facility intervals, not
+  audited settlement data.
+
 ## What I'd add next
 
 - Incremental dbt models + DuckDB partitioned Parquet for multi-week history.
-- A short-horizon price/emissions **forecast** (XGBoost/Prophet) as a new mart plus a "shift your load now?" signal.
-- CI (GitHub Actions) running `pytest` + `dbt build` on every push, and scheduled `dagster` runs in the cloud.
+- A short-horizon price/emissions **forecast** (XGBoost/Prophet) as a new mart plus a "shift your
+  load now?" signal.
+- CI (GitHub Actions) running `pytest` + `dbt build` on every push, and scheduled `dagster` runs
+  in the cloud.
 
 ---
 
