@@ -1,196 +1,131 @@
-<div align="center">
-
 # GridPulse
 
-**An end-to-end data-engineering pipeline for Australia's National Electricity Market (NEM) — from raw API to a live analytics dashboard.**
+A data pipeline and dashboard for Australia's National Electricity Market. It pulls
+five-minute generation and emissions data for every registered facility, cleans and
+warehouses it, models it with dbt, and serves the result as an interactive dashboard.
 
-[![Live app](https://img.shields.io/badge/live%20app-open%20dashboard-417505?style=for-the-badge&logo=streamlit&logoColor=white)](https://gridpulse-nem-analytics.streamlit.app/)
+**Live dashboard: https://gridpulse-nem-analytics.streamlit.app/**
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![DuckDB](https://img.shields.io/badge/DuckDB-warehouse-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/)
-[![dbt](https://img.shields.io/badge/dbt-marts%20%26%20tests-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
-[![Dagster](https://img.shields.io/badge/Dagster-orchestration-654FF0?logo=dagster&logoColor=white)](https://dagster.io/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Tests](https://img.shields.io/badge/tests-10%20passing-3FB950)](#verified-results-sample-week-1218-may-2026)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-</div>
+![GridPulse dashboard](docs/screenshots/hero.png)
 
-> ### 🔗 Live dashboard → **https://gridpulse-nem-analytics.streamlit.app/**
+The sample window covers 12 to 18 May 2026: 668,134 readings from 541 registered
+facilities across all five NEM regions. The finding that drives most of the dashboard
+is that coal supplies around 58% of the energy but roughly 95% of the emissions.
 
-Australia's electricity market publishes a firehose of data — every generator, every five
-minutes — but the raw feed is a rate-limited API of long-format JSON, not an answer. GridPulse
-turns one week of that feed into a governed, tested analytical warehouse and a dashboard that
-answers the questions that actually matter: *where does the power come from, where does the
-carbon come from, and why are those two not the same place?*
-
-It ingests **668,134 five-minute readings** from **541 registered facilities** (353 of which
-generated during the window), cleans and geocodes them, gates them through a 9-check quality
-layer, warehouses them in **DuckDB**, models them into tested **dbt marts**, and serves them
-through a live map and an analytics dashboard — the whole thing an orchestrated **Dagster**
-asset graph that **replays offline with no API key**.
-
-![GridPulse dashboard — Overview](docs/screenshots/hero.png)
-
-> Built from a COMP5339 (Data Engineering, University of Sydney) assignment and levelled up into
-> a production-shaped project: an installable package, orchestration, a dbt warehouse with data
-> tests, a unit-test suite, and a hand-crafted architecture diagram.
-
----
+This started as a COMP5339 (Data Engineering, University of Sydney) assignment and
+grew into a fuller project, with an installable package, Dagster orchestration, a dbt
+warehouse with data tests, and a unit test suite.
 
 ## The dashboard
 
-Four views, switched from an OpenElectricity-style top navigation. Every number on every page is
-read from the **tested dbt marts** — never from raw data.
+**Overview.** The week at a glance: KPI tiles, the seven-day generation stack by fuel,
+and the split between where energy comes from and where carbon comes from.
 
-### 📊 Overview
+![Overview](docs/screenshots/overview_generation.png)
 
-The week at a glance: a headline energy/emissions split, six KPI tiles (total energy, emissions,
-grid intensity, renewable share, NEM regions, generating sites), the full seven-day generation
-stack by fuel, and a fuel-mix breakdown that makes the central insight impossible to miss —
-**coal supplies ~58% of the energy but ~95% of the emissions.**
+**Facilities.** Every registered generator on a map, coloured by fuel group and sized
+by capacity, power, energy or emissions. Filter by name, region or technology, or
+switch on the 188 stations that sat idle during the window. Clicking a marker drills
+into that facility's five-minute week against its registered capacity.
 
-![Overview — generation stack](docs/screenshots/overview_generation.png)
+![Facilities](docs/screenshots/facilities_map.png)
 
-![Overview — energy mix vs emissions](docs/screenshots/overview_energy_mix.png)
+**Analysis.** Energy, carbon intensity and renewable share across the five regions;
+the diurnal duck curve, with seven days folded into one average day; and a leaderboard
+of the 15 facilities carrying the grid.
 
-### 🗺️ Facilities
+![Analysis](docs/screenshots/analysis_duck_curve.png)
 
-Every registered NEM generator on a map (modelled on the OpenElectricity *Facilities* view):
-colour = fuel group, marker size = capacity / power / energy / emissions, and hovering shows
-**every value** for that facility. Filter by name, region, technology, or toggle in the 188
-stations that sat idle during the window. Clicking a marker — or a row in the sortable table —
-drills into that facility's five-minute week: output against its registered capacity, plus its
-emissions trace.
+**About.** The architecture diagram and a stage-by-stage walkthrough, so the pipeline
+can be read without leaving the app.
 
-![Facilities — map and table](docs/screenshots/facilities_map.png)
+Alongside the marts dashboard, the original MQTT and Plotly Dash map
+(`Assignment2_Dashboard_Group156.ipynb`) replays the live stream.
 
-![Facilities — per-facility drill-down](docs/screenshots/facility_detail.png)
+Every number on every page reads from the tested dbt marts, never from raw data.
 
-### 📈 Analysis
+## How it works
 
-The story behind the numbers: energy, carbon intensity and renewable share compared across all
-five NEM regions; the diurnal "duck curve" (seven days folded into one average day, showing solar
-carving out midday while coal holds a flat baseload floor); and a leaderboard of the 15 facilities
-that carry the grid, by energy or by emissions.
-
-![Analysis — regions](docs/screenshots/analysis_regions.png)
-
-![Analysis — the duck curve](docs/screenshots/analysis_duck_curve.png)
-
-### 📄 About
-
-The embedded case study: the architecture diagram plus a stage-by-stage narrative of ingestion,
-transformation, quality, modelling, orchestration and serving — so a reviewer can read the whole
-pipeline without leaving the app.
-
-Alongside the marts dashboard, the original **live MQTT + Plotly Dash map**
-(`Assignment2_Dashboard_Group156.ipynb`) replays the real-time stream: the Dash map answers
-*"what's happening now?"*, the Streamlit dashboard answers *"what did the week look like?"*.
-
----
-
-## Architecture
-
-One command (`python -m gridpulse.pipeline`) reproduces every artefact — ingest, clean, geocode,
-quality-gate and load — from a **committed raw-JSON cache**, so the whole warehouse rebuilds
-**offline, with no API key**. `dbt build` then models and tests it; Dagster wraps the lot as one
-lineage graph with a daily schedule.
+`python -m gridpulse.pipeline` rebuilds every artefact from a committed raw-JSON
+cache, so the warehouse reproduces offline with no API key. `dbt build` then models
+and tests it, and Dagster wraps both as a single asset graph on a daily schedule.
 
 ![Architecture](docs/architecture.svg)
 
-Layered storage keeps the API touched **at most once per window**: immutable raw JSON (committed)
-→ consolidated CSV → DuckDB schema → dbt marts. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-for detail and [`docs/data_dictionary.md`](docs/data_dictionary.md) for the schema.
+A few decisions that shaped the build:
 
-**Engineering decisions worth reading:**
+- Raw responses are written to disk before parsing and committed to the repo. That
+  single choice is what lets the pipeline replay offline.
+- The API client retries only transient failures (429 and 5xx, honouring
+  `Retry-After`), fails fast on 4xx, and batches around 25 facility codes per call, so
+  roughly 430 facilities cost about 18 requests against a free-tier limit of 500 a day.
+- Parallel generating units are summed to facility level, since power and emissions
+  are both additive across units.
+- Nine quality checks run before load rather than after: row count, schema contract,
+  non-null keys, unique (interval, facility) grain, region domain, in-window
+  timestamps, non-negative emissions, coordinates in range. Negative *power* is kept
+  on purpose, because batteries charge.
+- Missing or invalid coordinates are backfilled offline from NEM-region centroids and
+  tagged with their source, seeding a DuckDB `GEOMETRY` column.
+- Testing sits in two layers: the Python quality gate, plus 39 dbt data tests
+  (`unique`, `not_null`, `relationships`, `accepted_values`, `accepted_range` and two
+  custom singular tests) guarding the marts.
 
-- **API hygiene by design.** `OpenElectricityClient` retries **only** transient failures
-  (429 / 5xx, honouring `Retry-After`), fails fast on 4xx, tracks a request budget, and batches
-  ~25 facility codes per call — so ~430 facilities cost ~18 requests, well under the free-tier
-  500/day ceiling.
-- **Cache-first, replay-anywhere.** Every raw response is written to disk **before** parsing and
-  is committed to the repo. That single materialisation is what lets every downstream stage — and
-  every reviewer — rebuild the warehouse offline with no key.
-- **Aggregation that respects the physics.** Parallel generating units are summed to facility
-  level because power *and* emissions are additive across units (e.g. Bayswater's four coal
-  turbines), then pivoted into one wide five-minute contract.
-- **Quality gated before load, not after.** A dependency-free "expectations" layer runs **9
-  checks** (row count, schema contract, non-null keys, unique `(interval, facility)` grain,
-  region domain, in-window timestamps, non-negative emissions, coordinates in range) and stops
-  the pipeline on a hard failure — negative *power* is kept on purpose (batteries charging) but
-  flagged.
-- **Spatial done deterministically.** Coordinates are validated against an Australian bounding
-  box and any invalid/missing point is backfilled from its NEM-region centroid (offline, tagged
-  `geocode_source`), seeding a DuckDB `GEOMETRY` column.
-- **Tested in two layers.** A Python quality gate **and** **39 dbt data tests** (`unique`,
-  `not_null`, `relationships`, `accepted_values`, `accepted_range`, plus two custom singular
-  tests) guard the marts — data quality is enforced, not assumed.
-- **One lineage graph.** The pipeline is a Dagster asset graph from API to marts; a custom
-  `DagsterDbtTranslator` maps the four warehouse tables 1:1 onto dbt sources so models always run
-  *after* the warehouse loads, and every asset emits row-count / pass-rate metadata.
+More detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), with the schema in
+[docs/data_dictionary.md](docs/data_dictionary.md).
 
----
+## Results
 
-## Verified results (sample week, 12–18 May 2026)
+Everything here is reproduced by `dbt build` and a query against DuckDB:
 
-Everything below is reproduced by the marts (`dbt build`, then query DuckDB):
-
-- **668,134** facility-interval rows across **541** registered facilities (**353** generated in
-  the window), all **5** NEM regions — **3.62 TWh** of energy, **2.15 Mt** of CO₂e.
-- **0 nulls** across the consolidated contract; **9/9** quality-gate checks pass; **39/39** dbt
+- 3.62 TWh of energy and 2.15 Mt of CO2e over the window.
+- No nulls across the consolidated contract; 9 of 9 quality checks and 39 of 39 dbt
   tests pass.
-- **Emissions concentration:** fossil fuels are **~64%** of energy but **~100%** of emissions —
-  coal alone is ~58% of energy and ~95% of the carbon. This is the headline insight.
-- **Regional intensity:** NSW1 (1.20 TWh) and QLD1 (1.09 TWh) lead on energy; **VIC1 is the
-  dirtiest grid at 0.767 tCO₂e/MWh** on brown coal while **hydro-powered TAS1 is 60× cleaner at
-  0.013** — the widest gap inside one market.
-- **Diurnal pattern:** solar peaks ~09:00–15:00 (local), carving the midday duck curve, while
-  coal never leaves the floor and gas + storage fill the evening ramp.
+- Fossil fuels account for about 64% of energy and close to 100% of emissions, with
+  coal alone at ~58% and ~95% respectively.
+- NSW1 (1.20 TWh) and QLD1 (1.09 TWh) lead on energy. VIC1 is the dirtiest grid at
+  0.767 tCO2e/MWh on brown coal, while hydro-powered TAS1 is 60 times cleaner at
+  0.013.
+- Solar peaks between roughly 09:00 and 15:00 local, carving out the midday duck
+  curve, while coal holds a flat baseload floor and gas and storage cover the evening
+  ramp.
 
----
+## Report
 
-## 📄 Technical report
+The full write-up, covering data sourcing, methodology, the five-stage architecture,
+data-quality strategy, dbt modelling, orchestration and results, is in
+[GridPulse_Report.pdf](GridPulse_Report.pdf), built from
+[`report/gridpulse.tex`](report/gridpulse.tex).
 
-A full write-up — data sourcing, methodology, the five-stage architecture, data-quality strategy,
-dbt modelling, orchestration and results — is available as a rendered
-**[PDF](GridPulse_Report.pdf)**, generated from the LaTeX source
-**[`report/gridpulse.tex`](report/gridpulse.tex)** with figures in
-[`report/fig/`](report/fig).
+## Stack
 
----
+Python 3.12, DuckDB, dbt (dbt-duckdb), Dagster, pandas, Streamlit, Plotly, MQTT
+(paho), Dash, pytest.
 
-## Tech stack
+## Data and limitations
 
-**Python 3.12 · DuckDB · dbt (dbt-duckdb) · Dagster · pandas · Streamlit · Plotly · MQTT (paho) · Dash · pytest**
+Data comes from the [OpenElectricity](https://openelectricity.org.au/) v4 API for the
+National Electricity Market, snapshot window 12 to 18 May 2026, licensed
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw JSON cache is
+committed; the DuckDB warehouse and consolidated CSV are derived and rebuilt by one
+command.
 
----
+The figures describe one seven-day window in one market, so they are a snapshot rather
+than long-run averages. Reported values are operational metering aggregated to
+five-minute facility intervals, not audited settlement data.
 
-## Data, scope & limitations
+## Next steps
 
-- **Data:** [OpenElectricity](https://openelectricity.org.au/) v4 API, National Electricity
-  Market, snapshot window 12–18 May 2026, licensed
-  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw JSON cache **is** committed
-  so the pipeline replays offline; the DuckDB warehouse and consolidated CSV are derived and
-  rebuilt by one command.
-- Figures are a **snapshot of one seven-day window** for one market — retrain/re-pull per window
-  (one command) rather than treating them as long-run averages.
-- Reported values are **operational metering** aggregated to five-minute facility intervals, not
-  audited settlement data.
-
-## What I'd add next
-
-- Incremental dbt models + DuckDB partitioned Parquet for multi-week history.
-- A short-horizon price/emissions **forecast** (XGBoost/Prophet) as a new mart plus a "shift your
-  load now?" signal.
-- CI (GitHub Actions) running `pytest` + `dbt build` on every push, and scheduled `dagster` runs
-  in the cloud.
-
----
+Incremental dbt models and partitioned Parquet for multi-week history, a short-horizon
+price and emissions forecast as a new mart, and CI running pytest and `dbt build` on
+every push.
 
 ## License
 
-Code is released under the [MIT License](LICENSE). Electricity data is sourced from
-[OpenElectricity](https://openelectricity.org.au/) under CC-BY 4.0.
+Code is released under the [MIT License](LICENSE). Electricity data comes from
+[OpenElectricity](https://openelectricity.org.au/) under CC BY 4.0.
 
-*Authors: Aditya Moon &amp; Pranjal Desai · data originally from OpenElectricity (CC-BY).*
+Authors: Aditya Moon and Pranjal Desai.
