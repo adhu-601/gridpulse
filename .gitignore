@@ -32,7 +32,6 @@ data/consolidated_facility_5min.csv
 .DS_Store
 Thumbs.db
 .Rhistory
-.claude/
 .Rproj.user/
 
 # Notes:
